@@ -15,6 +15,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.geekup.ticketbooking.repository.OrderRepository;
+import com.geekup.ticketbooking.entity.Order;
+import com.geekup.ticketbooking.entity.Ticket;
+import com.geekup.ticketbooking.enums.OrderStatus;
+import com.geekup.ticketbooking.enums.TicketStatus;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -92,6 +97,23 @@ public class BookingService {
         return orderRepository.findByRequestId(requestId)
                 .map(this::mapToOrderResponseDto)
                 .orElseThrow(() -> new RuntimeException("Booking not found for requestId: " + requestId));
+    }
+
+    @Transactional
+    public com.geekup.ticketbooking.dto.OrderResponseDto payOrder(String requestId) {
+        Order order = orderRepository.findByRequestId(requestId)
+                .orElseThrow(() -> new RuntimeException("Booking not found for requestId: " + requestId));
+        
+        if (order.getStatus() != OrderStatus.RESERVED) {
+            throw new RuntimeException("Order is not in RESERVED status");
+        }
+        
+        order.setStatus(OrderStatus.COMPLETED);
+        for (Ticket ticket : order.getTickets()) {
+            ticket.setStatus(TicketStatus.SOLD);
+        }
+        
+        return mapToOrderResponseDto(orderRepository.save(order));
     }
 
     private com.geekup.ticketbooking.dto.OrderResponseDto mapToOrderResponseDto(com.geekup.ticketbooking.entity.Order order) {

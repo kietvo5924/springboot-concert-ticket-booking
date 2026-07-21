@@ -30,4 +30,9 @@ public class BookingController {
     public ResponseEntity<com.geekup.ticketbooking.dto.OrderResponseDto> getBookingStatus(@PathVariable String requestId) {
         return ResponseEntity.ok(bookingService.getBookingStatus(requestId));
     }
+
+    @PostMapping("/{requestId}/pay")
+    public ResponseEntity<com.geekup.ticketbooking.dto.OrderResponseDto> payOrder(@PathVariable String requestId) {
+        return ResponseEntity.ok(bookingService.payOrder(requestId));
+    }
 }
