@@ -50,9 +50,12 @@ public class OrderProcessorServiceTest {
     void setUp() {
         bookingMessage = new BookingMessage("req-123", 1L, 10L, 100L, null);
 
-        concert = Concert.builder().id(10L).name("Test Concert").build();
-        category = TicketCategory.builder().id(100L).concert(concert).price(new BigDecimal("100000")).build();
-        ticket = Ticket.builder().id(999L).ticketCategory(category).status(TicketStatus.AVAILABLE).build();
+        concert = Concert.builder().name("Test Concert").build();
+        concert.setId(10L);
+        category = TicketCategory.builder().concert(concert).price(new BigDecimal("100000")).build();
+        category.setId(100L);
+        ticket = Ticket.builder().ticketCategory(category).status(TicketStatus.AVAILABLE).build();
+        ticket.setId(999L);
     }
 
     @Test
@@ -89,13 +92,13 @@ public class OrderProcessorServiceTest {
         // Arrange
         bookingMessage.setVoucherId(50L);
         Voucher voucher = Voucher.builder()
-                .id(50L)
                 .code("DISCOUNT10")
                 .active(true)
                 .quantity(10)
                 .discountPercentage(new BigDecimal("10.0"))
                 .expiryDate(LocalDateTime.now().plusDays(1))
                 .build();
+        voucher.setId(50L);
 
         when(orderRepository.findByRequestId("req-123")).thenReturn(Optional.empty());
         when(concertRepository.findById(10L)).thenReturn(Optional.of(concert));
@@ -117,7 +120,8 @@ public class OrderProcessorServiceTest {
     void testProcessOrder_WithFullyConsumedVoucher_ShouldThrowException() {
         // Arrange
         bookingMessage.setVoucherId(50L);
-        Voucher voucher = Voucher.builder().id(50L).active(true).quantity(0).build();
+        Voucher voucher = Voucher.builder().active(true).quantity(0).build();
+        voucher.setId(50L);
 
         when(orderRepository.findByRequestId("req-123")).thenReturn(Optional.empty());
         when(concertRepository.findById(10L)).thenReturn(Optional.of(concert));
