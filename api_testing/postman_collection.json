@@ -29,6 +29,48 @@
               "raw": "{\n  \"userId\": 1,\n  \"concertId\": 1,\n  \"ticketCategoryId\": 1,\n  \"voucherId\": null,\n  \"requestId\": \"req-uuid-12345\"\n}"
             }
           }
+        },
+        {
+          "name": "Get All Concerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/concerts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "concerts"]
+            }
+          }
+        },
+        {
+          "name": "Get Ticket Categories by Concert ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/concerts/1/categories",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "concerts", "1", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/bookings/req-uuid-12345",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "bookings", "req-uuid-12345"]
+            }
+          }
         }
       ]
     },
