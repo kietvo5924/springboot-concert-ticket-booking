@@ -28,44 +28,91 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final TicketRepository ticketRepository;
     private final RedissonClient redissonClient;
 
+    private final com.geekup.ticketbooking.repository.VoucherRepository voucherRepository;
+
     @Override
     @Transactional
     public void run(String... args) throws Exception {
         if (concertRepository.count() == 0) {
-            log.info("Seeding database with initial data...");
+            log.info("Seeding database with robust initial data for testing...");
 
-            Concert concert = Concert.builder()
+            // --- 1. Seed Concerts ---
+            Concert concert1 = Concert.builder()
                     .name("GeekUp Autumn Concert 2026")
                     .description("A spectacular musical event to celebrate autumn.")
                     .startTime(LocalDateTime.now().plusDays(30))
                     .endTime(LocalDateTime.now().plusDays(30).plusHours(3))
                     .location("HCMC Grand Theatre")
                     .build();
-            concertRepository.save(concert);
 
-            TicketCategory vipCategory = TicketCategory.builder()
-                    .concert(concert)
-                    .name("VIP")
-                    .price(new BigDecimal("1500000"))
-                    .initialQuantity(100)
-                    .remainingQuantity(100)
+            Concert concert2 = Concert.builder()
+                    .name("Indie Rock Night 2026")
+                    .description("The best indie bands gathered in one night.")
+                    .startTime(LocalDateTime.now().plusDays(15))
+                    .endTime(LocalDateTime.now().plusDays(15).plusHours(4))
+                    .location("Hoa Binh Theatre")
                     .build();
-            ticketCategoryRepository.save(vipCategory);
+                    
+            concertRepository.saveAll(java.util.List.of(concert1, concert2));
 
-            for (int i = 1; i <= 100; i++) {
-                Ticket ticket = Ticket.builder()
-                        .ticketCategory(vipCategory)
-                        .seatNumber("VIP-" + i)
-                        .status(TicketStatus.AVAILABLE)
-                        .build();
-                ticketRepository.save(ticket);
-            }
+            // --- 2. Seed Ticket Categories ---
+            TicketCategory c1Vip = createCategory(concert1, "VIP", new BigDecimal("1500000"), 50);
+            TicketCategory c1Standard = createCategory(concert1, "STANDARD", new BigDecimal("800000"), 150);
+            TicketCategory c2General = createCategory(concert2, "GENERAL", new BigDecimal("350000"), 300);
+            
+            ticketCategoryRepository.saveAll(java.util.List.of(c1Vip, c1Standard, c2General));
 
-            // Sync inventory to Redis for Flash Sale
-            RAtomicLong inventory = redissonClient.getAtomicLong("inventory:ticketCategory:" + vipCategory.getId());
-            inventory.set(100);
+            // --- 3. Seed Tickets & Redis Inventory ---
+            generateTicketsAndSyncRedis(c1Vip);
+            generateTicketsAndSyncRedis(c1Standard);
+            generateTicketsAndSyncRedis(c2General);
 
-            log.info("Seeding completed successfully! Concert ID: {}, VIP Category ID: {}", concert.getId(), vipCategory.getId());
+            // --- 4. Seed Vouchers ---
+            com.geekup.ticketbooking.entity.Voucher voucher1 = com.geekup.ticketbooking.entity.Voucher.builder()
+                    .code("GEEKUP2026")
+                    .discountPercentage(new BigDecimal("10.0")) // 10% off
+                    .maxDiscountAmount(new BigDecimal("200000")) // up to 200k
+                    .expiryDate(LocalDateTime.now().plusDays(60))
+                    .active(true)
+                    .build();
+            
+            com.geekup.ticketbooking.entity.Voucher voucher2 = com.geekup.ticketbooking.entity.Voucher.builder()
+                    .code("FLASH50")
+                    .discountPercentage(new BigDecimal("50.0")) // 50% off
+                    .maxDiscountAmount(new BigDecimal("500000")) 
+                    .expiryDate(LocalDateTime.now().plusDays(60))
+                    .active(true)
+                    .build();
+
+            voucherRepository.saveAll(java.util.List.of(voucher1, voucher2));
+
+            log.info("Robust seeding completed successfully!");
         }
+    }
+
+    private TicketCategory createCategory(Concert concert, String name, BigDecimal price, int quantity) {
+        return TicketCategory.builder()
+                .concert(concert)
+                .name(name)
+                .price(price)
+                .initialQuantity(quantity)
+                .remainingQuantity(quantity)
+                .build();
+    }
+
+    private void generateTicketsAndSyncRedis(TicketCategory category) {
+        java.util.List<Ticket> tickets = new java.util.ArrayList<>();
+        for (int i = 1; i <= category.getInitialQuantity(); i++) {
+            tickets.add(Ticket.builder()
+                    .ticketCategory(category)
+                    .seatNumber(category.getName() + "-" + i)
+                    .status(TicketStatus.AVAILABLE)
+                    .build());
+        }
+        ticketRepository.saveAll(tickets);
+
+        // Sync inventory to Redis for Flash Sale
+        RAtomicLong inventory = redissonClient.getAtomicLong("inventory:ticketCategory:" + category.getId());
+        inventory.set(category.getInitialQuantity());
     }
 }
