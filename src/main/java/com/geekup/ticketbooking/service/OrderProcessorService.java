@@ -7,6 +7,7 @@ import com.geekup.ticketbooking.message.BookingMessage;
 import com.geekup.ticketbooking.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +24,15 @@ public class OrderProcessorService {
     private final ConcertRepository concertRepository;
     private final VoucherRepository voucherRepository;
     private final TicketCategoryRepository ticketCategoryRepository;
+    private final RedissonClient redissonClient;
 
     @Transactional
     public void processFlashSaleOrder(BookingMessage message) {
         if (orderRepository.findByRequestId(message.getRequestId()).isPresent()) {
             log.warn("Order with requestId {} already exists. Skipping.", message.getRequestId());
+            // Restore the tentative inventory decrement made by BookingService
+            redissonClient.getAtomicLong("inventory:ticketCategory:" + message.getTicketCategoryId())
+                    .incrementAndGet();
             return;
         }
 

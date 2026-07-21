@@ -24,20 +24,18 @@ public class ConcertController {
 
     @GetMapping
     @Cacheable(value = "concerts")
-    public ResponseEntity<List<ConcertResponseDto>> getAllConcerts() {
-        List<ConcertResponseDto> concerts = concertRepository.findAll().stream()
+    public List<ConcertResponseDto> getAllConcerts() {
+        return concertRepository.findAll().stream()
                 .map(this::mapToConcertResponseDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(concerts);
     }
 
     @GetMapping("/{id}/categories")
     @Cacheable(value = "ticketCategories", key = "#id")
-    public ResponseEntity<List<TicketCategoryResponseDto>> getTicketCategories(@PathVariable Long id) {
-        List<TicketCategoryResponseDto> categories = ticketCategoryRepository.findByConcertId(id).stream()
+    public List<TicketCategoryResponseDto> getTicketCategories(@PathVariable Long id) {
+        return ticketCategoryRepository.findByConcertId(id).stream()
                 .map(this::mapToTicketCategoryResponseDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(categories);
     }
 
     private ConcertResponseDto mapToConcertResponseDto(Concert concert) {
