@@ -2,15 +2,6 @@ spring:
   application:
     name: ticketbooking
     
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  
   datasource:
     url: jdbc:postgresql://localhost:5433/ticketbooking
     username: user
@@ -42,3 +33,12 @@ management:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
