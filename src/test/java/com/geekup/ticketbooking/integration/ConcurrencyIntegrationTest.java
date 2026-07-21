@@ -171,4 +171,42 @@ public class ConcurrencyIntegrationTest {
         Voucher updatedVoucher = voucherRepository.findById(voucher.getId()).get();
         assertEquals(0, updatedVoucher.getQuantity(), "Voucher quantity should be exactly 0, not negative!");
     }
+
+    @Test
+    void testIdempotency_DuplicateBookingsCausedByRetries() throws InterruptedException {
+        // Arrange: 2 Tickets available
+        ticketRepository.save(Ticket.builder().ticketCategory(category).seatNumber("VIP-3").status(TicketStatus.AVAILABLE).build());
+        ticketRepository.save(Ticket.builder().ticketCategory(category).seatNumber("VIP-4").status(TicketStatus.AVAILABLE).build());
+
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        CountDownLatch latch = new CountDownLatch(2);
+
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        // A single unique Request ID simulating a network retry or double click
+        String duplicateRequestId = UUID.randomUUID().toString();
+        BookingMessage msg = new BookingMessage(duplicateRequestId, 2L, concert.getId(), category.getId(), null);
+
+        // Act: 2 Concurrent Threads processing the EXACT SAME message (Retry scenario)
+        Runnable buyTask = () -> {
+            try {
+                orderProcessorService.processFlashSaleOrder(msg);
+                successCount.incrementAndGet();
+            } catch (Exception e) {
+                log.error("Failed idempotency: {}", e.getMessage());
+            } finally {
+                latch.countDown();
+            }
+        };
+
+        executorService.submit(buyTask);
+        executorService.submit(buyTask);
+
+        latch.await(5, TimeUnit.SECONDS);
+
+        // Assert: Both methods might run without exception, but only ONE Order should be in the Database!
+        List<Order> orders = orderRepository.findAll();
+        assertEquals(1, orders.size(), "Idempotency failed! Duplicate orders created for the same Request ID.");
+        assertEquals(duplicateRequestId, orders.get(0).getRequestId());
+    }
 }
