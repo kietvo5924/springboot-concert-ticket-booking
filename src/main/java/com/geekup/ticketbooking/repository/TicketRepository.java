@@ -17,4 +17,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")})
     Optional<Ticket> findFirstByTicketCategoryIdAndStatus(Long categoryId, TicketStatus status);
+    
+    long countByTicketCategoryIdAndStatus(Long categoryId, TicketStatus status);
 }

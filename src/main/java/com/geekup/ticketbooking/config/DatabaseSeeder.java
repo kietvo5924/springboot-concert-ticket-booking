@@ -89,6 +89,14 @@ public class DatabaseSeeder implements CommandLineRunner {
             voucherRepository.saveAll(java.util.List.of(voucher1, voucher2));
 
             log.info("Robust seeding completed successfully!");
+        } else {
+            log.info("Database already seeded. Syncing inventory to Redis...");
+            for (TicketCategory category : ticketCategoryRepository.findAll()) {
+                RAtomicLong inventory = redissonClient.getAtomicLong("inventory:ticketCategory:" + category.getId());
+                long availableCount = ticketRepository.countByTicketCategoryIdAndStatus(category.getId(), TicketStatus.AVAILABLE);
+                inventory.set(availableCount);
+            }
+            log.info("Redis inventory sync completed.");
         }
     }
 

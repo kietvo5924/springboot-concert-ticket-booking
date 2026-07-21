@@ -61,9 +61,20 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"userId\": 1,\n  \"concertId\": 1,\n  \"ticketCategoryId\": 1,\n  \"voucherId\": null,\n  \"requestId\": \"{{$guid}}\"\n}"
+                            "raw": "{\n  \"userId\": 1,\n  \"concertId\": 1,\n  \"ticketCategoryId\": 1,\n  \"voucherId\": null,\n  \"requestId\": \"{{randomReqId}}\"\n}"
                         }
-                    }
+                    },
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "pm.variables.set('randomReqId', pm.variables.replaceIn('{{$guid}}'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
                 },
                 {
                     "name": "Get All Concerts",
