@@ -19,7 +19,6 @@ import org.redisson.api.RedissonClient;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -30,86 +29,86 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class TicketReleaseSchedulerTest {
 
-    @Mock
-    private OrderRepository orderRepository;
+        @Mock
+        private OrderRepository orderRepository;
 
-    @Mock
-    private RedissonClient redissonClient;
+        @Mock
+        private RedissonClient redissonClient;
 
-    @Mock
-    private VoucherRepository voucherRepository;
+        @Mock
+        private VoucherRepository voucherRepository;
 
-    @Mock
-    private RAtomicLong mockAtomicLong;
+        @Mock
+        private RAtomicLong mockAtomicLong;
 
-    @InjectMocks
-    private TicketReleaseScheduler ticketReleaseScheduler;
+        @InjectMocks
+        private TicketReleaseScheduler ticketReleaseScheduler;
 
-    private Order expiredOrder;
-    private Ticket reservedTicket;
-    private Voucher usedVoucher;
+        private Order expiredOrder;
+        private Ticket reservedTicket;
+        private Voucher usedVoucher;
 
-    @BeforeEach
-    void setUp() {
-        TicketCategory category = TicketCategory.builder().build();
-        category.setId(10L);
+        @BeforeEach
+        void setUp() {
+                TicketCategory category = TicketCategory.builder().build();
+                category.setId(10L);
 
-        reservedTicket = Ticket.builder()
-                .ticketCategory(category)
-                .status(TicketStatus.RESERVED)
-                .build();
+                reservedTicket = Ticket.builder()
+                                .ticketCategory(category)
+                                .status(TicketStatus.RESERVED)
+                                .build();
 
-        usedVoucher = Voucher.builder()
-                .quantity(5)
-                .build();
-        usedVoucher.setId(99L);
+                usedVoucher = Voucher.builder()
+                                .quantity(5)
+                                .build();
+                usedVoucher.setId(99L);
 
-        expiredOrder = Order.builder()
-                .status(OrderStatus.RESERVED)
-                .tickets(Collections.singletonList(reservedTicket))
-                .voucher(usedVoucher)
-                .build();
-        expiredOrder.setId(100L);
-    }
+                expiredOrder = Order.builder()
+                                .status(OrderStatus.RESERVED)
+                                .tickets(Collections.singletonList(reservedTicket))
+                                .voucher(usedVoucher)
+                                .build();
+                expiredOrder.setId(100L);
+        }
 
-    @Test
-    void testReleaseUnpaidTickets_WithExpiredOrder_Success() {
-        // Arrange
-        when(orderRepository.findByStatusAndCreatedAtBefore(eq(OrderStatus.RESERVED), any(LocalDateTime.class)))
-                .thenReturn(Collections.singletonList(expiredOrder));
-        when(redissonClient.getAtomicLong("inventory:ticketCategory:10")).thenReturn(mockAtomicLong);
+        @Test
+        void testReleaseUnpaidTickets_WithExpiredOrder_Success() {
+                // Arrange
+                when(orderRepository.findByStatusAndCreatedAtBefore(eq(OrderStatus.RESERVED), any(LocalDateTime.class)))
+                                .thenReturn(Collections.singletonList(expiredOrder));
+                when(redissonClient.getAtomicLong("inventory:ticketCategory:10")).thenReturn(mockAtomicLong);
 
-        // Act
-        ticketReleaseScheduler.releaseUnpaidTickets();
+                // Act
+                ticketReleaseScheduler.releaseUnpaidTickets();
 
-        // Assert
-        assertEquals(OrderStatus.FAILED, expiredOrder.getStatus());
-        assertEquals(TicketStatus.AVAILABLE, reservedTicket.getStatus());
-        assertNull(reservedTicket.getOrder());
-        
-        // Verify inventory is refunded in Redis
-        verify(mockAtomicLong, times(1)).incrementAndGet();
-        
-        // Verify voucher is refunded
-        assertEquals(6, usedVoucher.getQuantity());
-        verify(voucherRepository, times(1)).save(usedVoucher);
-        
-        // Verify order is saved with new FAILED status
-        verify(orderRepository, times(1)).save(expiredOrder);
-    }
+                // Assert
+                assertEquals(OrderStatus.FAILED, expiredOrder.getStatus());
+                assertEquals(TicketStatus.AVAILABLE, reservedTicket.getStatus());
+                assertNull(reservedTicket.getOrder());
 
-    @Test
-    void testReleaseUnpaidTickets_NoExpiredOrders() {
-        // Arrange
-        when(orderRepository.findByStatusAndCreatedAtBefore(eq(OrderStatus.RESERVED), any(LocalDateTime.class)))
-                .thenReturn(Collections.emptyList());
+                // Verify inventory is refunded in Redis
+                verify(mockAtomicLong, times(1)).incrementAndGet();
 
-        // Act
-        ticketReleaseScheduler.releaseUnpaidTickets();
+                // Verify voucher is refunded
+                assertEquals(6, usedVoucher.getQuantity());
+                verify(voucherRepository, times(1)).save(usedVoucher);
 
-        // Assert
-        verify(orderRepository, never()).save(any(Order.class));
-        verify(redissonClient, never()).getAtomicLong(anyString());
-        verify(voucherRepository, never()).save(any(Voucher.class));
-    }
+                // Verify order is saved with new FAILED status
+                verify(orderRepository, times(1)).save(expiredOrder);
+        }
+
+        @Test
+        void testReleaseUnpaidTickets_NoExpiredOrders() {
+                // Arrange
+                when(orderRepository.findByStatusAndCreatedAtBefore(eq(OrderStatus.RESERVED), any(LocalDateTime.class)))
+                                .thenReturn(Collections.emptyList());
+
+                // Act
+                ticketReleaseScheduler.releaseUnpaidTickets();
+
+                // Assert
+                verify(orderRepository, never()).save(any(Order.class));
+                verify(redissonClient, never()).getAtomicLong(anyString());
+                verify(voucherRepository, never()).save(any(Voucher.class));
+        }
 }
