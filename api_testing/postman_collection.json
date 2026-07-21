@@ -37,6 +37,35 @@
                     }
                 },
                 {
+                    "name": "Submit Booking Request (Spam Test)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/bookings",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "bookings"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userId\": 1,\n  \"concertId\": 1,\n  \"ticketCategoryId\": 1,\n  \"voucherId\": null,\n  \"requestId\": \"{{$guid}}\"\n}"
+                        }
+                    }
+                },
+                {
                     "name": "Get All Concerts",
                     "request": {
                         "method": "GET",
