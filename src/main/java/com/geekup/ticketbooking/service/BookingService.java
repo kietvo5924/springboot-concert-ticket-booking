@@ -14,6 +14,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import com.geekup.ticketbooking.repository.OrderRepository;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -23,6 +24,7 @@ public class BookingService {
 
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OrderRepository orderRepository;
     
     private static final String KAFKA_TOPIC = "booking-requests";
 
@@ -84,5 +86,26 @@ public class BookingService {
                 lock.unlock();
             }
         }
+    }
+
+    public com.geekup.ticketbooking.dto.OrderResponseDto getBookingStatus(String requestId) {
+        return orderRepository.findByRequestId(requestId)
+                .map(this::mapToOrderResponseDto)
+                .orElseThrow(() -> new RuntimeException("Booking not found for requestId: " + requestId));
+    }
+
+    private com.geekup.ticketbooking.dto.OrderResponseDto mapToOrderResponseDto(com.geekup.ticketbooking.entity.Order order) {
+        return com.geekup.ticketbooking.dto.OrderResponseDto.builder()
+                .id(order.getId())
+                .userId(order.getUserId())
+                .concertId(order.getConcert() != null ? order.getConcert().getId() : null)
+                .concertName(order.getConcert() != null ? order.getConcert().getName() : null)
+                .voucherId(order.getVoucher() != null ? order.getVoucher().getId() : null)
+                .totalAmount(order.getTotalAmount())
+                .discountAmount(order.getDiscountAmount())
+                .finalAmount(order.getFinalAmount())
+                .status(order.getStatus())
+                .requestId(order.getRequestId())
+                .build();
     }
 }

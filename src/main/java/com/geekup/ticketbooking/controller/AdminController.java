@@ -1,5 +1,6 @@
 package com.geekup.ticketbooking.controller;
 
+import com.geekup.ticketbooking.dto.OrderResponseDto;
 import com.geekup.ticketbooking.dto.TicketAvailabilityDto;
 import com.geekup.ticketbooking.dto.UpdateOrderStatusRequestDto;
 import com.geekup.ticketbooking.entity.Order;
@@ -21,8 +22,10 @@ public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/bookings")
-    public ResponseEntity<Page<Order>> getAllBookings(Pageable pageable) {
-        return ResponseEntity.ok(adminService.getAllBookings(pageable));
+    public ResponseEntity<Page<OrderResponseDto>> getAllBookings(Pageable pageable) {
+        Page<Order> orders = adminService.getAllBookings(pageable);
+        Page<OrderResponseDto> response = orders.map(this::mapToOrderResponseDto);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/tickets/availability")
@@ -31,10 +34,25 @@ public class AdminController {
     }
 
     @PutMapping("/bookings/{id}/status")
-    public ResponseEntity<Order> updateOrderStatus(
+    public ResponseEntity<OrderResponseDto> updateOrderStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateOrderStatusRequestDto request) {
         Order updatedOrder = adminService.updateOrderStatus(id, request.getStatus());
-        return ResponseEntity.ok(updatedOrder);
+        return ResponseEntity.ok(mapToOrderResponseDto(updatedOrder));
+    }
+    
+    private OrderResponseDto mapToOrderResponseDto(Order order) {
+        return OrderResponseDto.builder()
+                .id(order.getId())
+                .userId(order.getUserId())
+                .concertId(order.getConcert() != null ? order.getConcert().getId() : null)
+                .concertName(order.getConcert() != null ? order.getConcert().getName() : null)
+                .voucherId(order.getVoucher() != null ? order.getVoucher().getId() : null)
+                .totalAmount(order.getTotalAmount())
+                .discountAmount(order.getDiscountAmount())
+                .finalAmount(order.getFinalAmount())
+                .status(order.getStatus())
+                .requestId(order.getRequestId())
+                .build();
     }
 }

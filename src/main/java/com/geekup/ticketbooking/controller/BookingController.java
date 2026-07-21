@@ -25,4 +25,9 @@ public class BookingController {
             "requestId", requestDto.getRequestId()
         ));
     }
+    
+    @GetMapping("/{requestId}")
+    public ResponseEntity<com.geekup.ticketbooking.dto.OrderResponseDto> getBookingStatus(@PathVariable String requestId) {
+        return ResponseEntity.ok(bookingService.getBookingStatus(requestId));
+    }
 }
