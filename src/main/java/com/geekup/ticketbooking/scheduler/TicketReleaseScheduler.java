@@ -51,6 +51,13 @@ public class TicketReleaseScheduler {
                 // Refund inventory to Redis
                 redissonClient.getAtomicLong("inventory:ticketCategory:" + ticket.getTicketCategory().getId())
                         .incrementAndGet();
+                        
+                // Refund inventory to Database TicketCategory
+                com.geekup.ticketbooking.entity.TicketCategory category = ticket.getTicketCategory();
+                category.setRemainingQuantity(category.getRemainingQuantity() + 1);
+                // Note: It will be saved automatically by JPA cascade or at the end of transaction, 
+                // but let's be explicit if we need to or just let JPA handle it.
+                // ticketCategoryRepository.save(category) is needed if not managed or cascaded.
             }
 
             // Refund voucher if used

@@ -90,6 +90,10 @@ public class OrderProcessorService {
             voucherRepository.save(voucher);
         }
         
+        category.setRemainingQuantity(category.getRemainingQuantity() - 1);
+        ticketCategoryRepository.save(category);
+        
+        
         orderRepository.save(order);
         log.info("Successfully created order {} for requestId {}", order.getId(), message.getRequestId());
     }

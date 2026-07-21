@@ -62,7 +62,10 @@ public class AdminService {
                 ticket.setOrder(null);
             }
             // Trong thực tế, bạn cũng cần cộng lại remainingQuantity trong DB và Redis ở đây.
-            // ticketCategory.setRemainingQuantity(ticketCategory.getRemainingQuantity() + 1);
+            for (Ticket ticket : order.getTickets()) {
+                TicketCategory category = ticket.getTicketCategory();
+                category.setRemainingQuantity(category.getRemainingQuantity() + 1);
+            }
         }
         
         return orderRepository.save(order);
