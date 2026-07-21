@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -98,7 +97,8 @@ public class ConcurrencyIntegrationTest {
         // Act: 2 Concurrent Threads trying to process order for the SAME category
         Runnable buyTask = () -> {
             try {
-                BookingMessage msg = new BookingMessage(UUID.randomUUID().toString(), 1L, concert.getId(), category.getId(), null);
+                BookingMessage msg = new BookingMessage(UUID.randomUUID().toString(), 1L, concert.getId(),
+                        category.getId(), null);
                 orderProcessorService.processFlashSaleOrder(msg);
                 successCount.incrementAndGet();
             } catch (Exception e) {
@@ -114,10 +114,11 @@ public class ConcurrencyIntegrationTest {
 
         latch.await(5, TimeUnit.SECONDS);
 
-        // Assert: Only 1 should succeed, 1 should fail because of PESSIMISTIC_WRITE lock and no physical tickets left
+        // Assert: Only 1 should succeed, 1 should fail because of PESSIMISTIC_WRITE
+        // lock and no physical tickets left
         assertEquals(1, successCount.get(), "Only 1 user should successfully get the ticket");
         assertEquals(1, failCount.get(), "The 2nd user must fail with Exception (No physical tickets available)");
-        
+
         List<Order> orders = orderRepository.findAll();
         assertEquals(1, orders.size(), "Only 1 order should be saved in DB");
     }
@@ -125,8 +126,10 @@ public class ConcurrencyIntegrationTest {
     @Test
     void testVoucherAbuse_TwoUsersUsingTheLastVoucher() throws InterruptedException {
         // Arrange: 2 Tickets available, but ONLY 1 Voucher available
-        ticketRepository.save(Ticket.builder().ticketCategory(category).seatNumber("VIP-1").status(TicketStatus.AVAILABLE).build());
-        ticketRepository.save(Ticket.builder().ticketCategory(category).seatNumber("VIP-2").status(TicketStatus.AVAILABLE).build());
+        ticketRepository.save(
+                Ticket.builder().ticketCategory(category).seatNumber("VIP-1").status(TicketStatus.AVAILABLE).build());
+        ticketRepository.save(
+                Ticket.builder().ticketCategory(category).seatNumber("VIP-2").status(TicketStatus.AVAILABLE).build());
 
         voucher = Voucher.builder()
                 .code("LAST_VOUCHER")
@@ -148,7 +151,8 @@ public class ConcurrencyIntegrationTest {
             try {
                 // Different users, different request IDs, but same voucher
                 Long randomUserId = (long) (Math.random() * 1000);
-                BookingMessage msg = new BookingMessage(UUID.randomUUID().toString(), randomUserId, concert.getId(), category.getId(), voucher.getId());
+                BookingMessage msg = new BookingMessage(UUID.randomUUID().toString(), randomUserId, concert.getId(),
+                        category.getId(), voucher.getId());
                 orderProcessorService.processFlashSaleOrder(msg);
                 successCount.incrementAndGet();
             } catch (Exception e) {
@@ -164,10 +168,11 @@ public class ConcurrencyIntegrationTest {
 
         latch.await(5, TimeUnit.SECONDS);
 
-        // Assert: Only 1 should succeed, 1 should fail because voucher quantity reached 0
+        // Assert: Only 1 should succeed, 1 should fail because voucher quantity reached
+        // 0
         assertEquals(1, successCount.get(), "Only 1 user should successfully use the voucher");
         assertEquals(1, failCount.get(), "The 2nd user must fail with Exception (Voucher is fully consumed)");
-        
+
         Voucher updatedVoucher = voucherRepository.findById(voucher.getId()).get();
         assertEquals(0, updatedVoucher.getQuantity(), "Voucher quantity should be exactly 0, not negative!");
     }
@@ -175,8 +180,10 @@ public class ConcurrencyIntegrationTest {
     @Test
     void testIdempotency_DuplicateBookingsCausedByRetries() throws InterruptedException {
         // Arrange: 2 Tickets available
-        ticketRepository.save(Ticket.builder().ticketCategory(category).seatNumber("VIP-3").status(TicketStatus.AVAILABLE).build());
-        ticketRepository.save(Ticket.builder().ticketCategory(category).seatNumber("VIP-4").status(TicketStatus.AVAILABLE).build());
+        ticketRepository.save(
+                Ticket.builder().ticketCategory(category).seatNumber("VIP-3").status(TicketStatus.AVAILABLE).build());
+        ticketRepository.save(
+                Ticket.builder().ticketCategory(category).seatNumber("VIP-4").status(TicketStatus.AVAILABLE).build());
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         CountDownLatch latch = new CountDownLatch(2);
@@ -204,7 +211,8 @@ public class ConcurrencyIntegrationTest {
 
         latch.await(5, TimeUnit.SECONDS);
 
-        // Assert: Both methods might run without exception, but only ONE Order should be in the Database!
+        // Assert: Both methods might run without exception, but only ONE Order should
+        // be in the Database!
         List<Order> orders = orderRepository.findAll();
         assertEquals(1, orders.size(), "Idempotency failed! Duplicate orders created for the same Request ID.");
         assertEquals(duplicateRequestId, orders.get(0).getRequestId());
