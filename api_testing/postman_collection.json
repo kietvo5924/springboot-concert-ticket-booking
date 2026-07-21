@@ -98,6 +98,29 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Pay Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/bookings/req-uuid-12345/pay",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "bookings",
+                                "req-uuid-12345",
+                                "pay"
+                            ]
+                        }
+                    },
+                    "response": []
                 }
             ]
         },
@@ -188,6 +211,52 @@
                             "raw": "{\n  \"status\": \"COMPLETED\"\n}"
                         }
                     }
+                },
+                {
+                    "name": "Get DLQ Messages",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/admin/dlq",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "dlq"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Retry DLQ Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/api/v1/admin/dlq/1/retry",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "dlq",
+                                "1",
+                                "retry"
+                            ]
+                        }
+                    },
+                    "response": []
                 }
             ]
         }
