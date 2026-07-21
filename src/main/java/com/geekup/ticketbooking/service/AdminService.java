@@ -8,6 +8,10 @@ import com.geekup.ticketbooking.enums.OrderStatus;
 import com.geekup.ticketbooking.enums.TicketStatus;
 import com.geekup.ticketbooking.repository.OrderRepository;
 import com.geekup.ticketbooking.repository.TicketCategoryRepository;
+import com.geekup.ticketbooking.entity.DeadLetterMessage;
+import com.geekup.ticketbooking.repository.DeadLetterMessageRepository;
+import org.springframework.kafka.core.KafkaTemplate;
+import com.geekup.ticketbooking.message.BookingMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +27,8 @@ public class AdminService {
 
     private final OrderRepository orderRepository;
     private final TicketCategoryRepository ticketCategoryRepository;
+    private final DeadLetterMessageRepository deadLetterMessageRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public Page<Order> getAllBookings(Pageable pageable) {
         return orderRepository.findAll(pageable);
@@ -60,5 +66,29 @@ public class AdminService {
         }
         
         return orderRepository.save(order);
+    }
+
+    public Page<DeadLetterMessage> getDeadLetterMessages(Pageable pageable) {
+        return deadLetterMessageRepository.findAll(pageable);
+    }
+
+    @Transactional
+    public void retryDeadLetterMessage(Long dlqId) {
+        DeadLetterMessage dlqEntity = deadLetterMessageRepository.findById(dlqId)
+                .orElseThrow(() -> new RuntimeException("DLQ Message not found with id: " + dlqId));
+        
+        BookingMessage message = new BookingMessage(
+                dlqEntity.getRequestId(),
+                dlqEntity.getUserId(),
+                dlqEntity.getConcertId(),
+                dlqEntity.getTicketCategoryId(),
+                dlqEntity.getVoucherId()
+        );
+        
+        // Re-publish to the main queue
+        kafkaTemplate.send("booking-requests", message.getRequestId(), message);
+        
+        // Remove from DLQ table
+        deadLetterMessageRepository.delete(dlqEntity);
     }
 }

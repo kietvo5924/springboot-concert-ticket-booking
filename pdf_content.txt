@@ -1,0 +1,107 @@
+PRODUCT BACKEND ENGINEER TEST 
+Things to keep in m ind 
+Results m ust be subm itted within the tim e fram e (48 hours) you have inform ed. In case of any change in
+test tim e fram e, the new tim efram e m ust be updated as soon as possible and m ust still be within hours of
+receiving the 1st em ail.
+You m ay use Google, AI tools, or any online resources during the assignm ent. However, you m ust fully
+understand and be able to explain every technical decision in your subm ission. W e are m ore interested in
+your engineering thinking and trade-off decisions than building m any features. 
+You can use any technologies if you think they are necessary for your system . 
+More about us: 
+●  GEEK Up business: https://geekup.vn 
+●  GEEK Up environm ent: https://www.facebook.com /GEEKUpAdventure Test result note 
+Please upload all of result into 1 folder and subm it via Link (Em ail)
+RESPONSIBILITIES & REQUIREMENTS: 
+1. Business Context:  
+A startup is preparing to launch an online Concert Ticket Booking Platform . 
+The platform  allows users to: 
+●
+●
+●
+●
+● Browse concerts 
+View ticket categories and prices
+Reserve tickets 
+Apply prom otional vouchers
+Track booking status 
+To support daily operations, the startup also needs an internal Operation Dashboard for operators and
+adm inistrators. 
+The Operation Dashboard helps the operation team : 
+●
+●
+●
+●
+●
+● M onitor bookings 
+M anage / publish new concerts’ tickets 
+Validate ticket availability 
+M anage voucher cam paigns 
+Handle failed or suspicious bookings 
+Update booking status m anually when necessary 
+3. Requirement  
+You are hired as a Software Engineer to help design and im plem ent a sim ple backend system  for both: 2. Business Expectation  
+To attract users during launch week, the startup will run a Flash Sale Cam paign for a highly anticipated concert
+event. 
+Expected traffic: 
+●
+● Custom er-facing booking flows
+Internal operation workflows 
+Your job is: 
+-
+-
+- Design an architecture for this Concert Ticket Booking Platform .
+Setup & im plem ent the codebase that reflects the architecture
+Provide Backend APIs for both: 
+-
+- Custom er-facing booking flows
+Internal operation workflows 
+- ●
+● Around 50,000 users 
+Peak traffic approxim ately 300–500 booking requests per m inute 
+Each concert event has: 
+●
+●
+● Lim ited ticket quantity 
+M ultiple ticket categories (VIP, Standard, etc.)
+Lim ited prom otional vouchers 
+The startup is concerned about: 
+Overselling tickets 
+Duplicate bookings caused by retries 
+Users abusing prom otional vouchers 
+System  instability during flash sale traffic spikes ●
+●
+●
+●
+● 
+You should send back to us: 
+- Docum ents that related to System  / Database Design, including your analytics & explanation about your
+design 
+Your codebase, including: - 
+-
+-
+-
+-
+- Source code 
+Coding guideline & convention (how to code a new API, how to run unit test) 
+How to setup & run your codebase in local 
+API docum ents (ex: you can use Swagger) 
+API testing collections (ex: you can use Postm an) – it should work with the local setup 
+- Docum ents that describe your assumptions / what you have done / what you have not done for
+features & scope of features that your system  is serving / not serving (lim itation), for exam ple: 
+- You assum e that your booking ticket will have 4 states (received, waiting for paym ent, com plete
+paym ent, …) so you will im plem ent an API to support change order status within these 4 states. Your
+system  supports operation team  to create vouchers, but does not support update vouchers’
+inform ation or delete vouchers, ... 
+You can even not serve APIs for create/update/delete vouchers from  the operation dashboard, just
+seeding vouchers data and m aking sure custom ers can apply that voucher when creating an order. - 
+- 
+You are NOT expected to build a production-ready system
+Instead, we want to understand: 
+-
+-
+- How you think about backend design 
+How you structure your code 
+How you reason about possible issues and workflows in the system  
+All exam ples above just em phasize that you should know how to define the scope of the features that your system
+will serve, and that you’ll have sufficient tim e to produce the best output. So please take your tim e to think carefully
+about what you should prioritize to build first in order to deliver the greatest value to the business. 

@@ -4,6 +4,7 @@ import com.geekup.ticketbooking.dto.OrderResponseDto;
 import com.geekup.ticketbooking.dto.TicketAvailabilityDto;
 import com.geekup.ticketbooking.dto.UpdateOrderStatusRequestDto;
 import com.geekup.ticketbooking.entity.Order;
+import com.geekup.ticketbooking.entity.DeadLetterMessage;
 import com.geekup.ticketbooking.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -54,5 +55,16 @@ public class AdminController {
                 .status(order.getStatus())
                 .requestId(order.getRequestId())
                 .build();
+    }
+
+    @GetMapping("/dlq")
+    public ResponseEntity<Page<DeadLetterMessage>> getDeadLetterMessages(Pageable pageable) {
+        return ResponseEntity.ok(adminService.getDeadLetterMessages(pageable));
+    }
+
+    @PostMapping("/dlq/{id}/retry")
+    public ResponseEntity<String> retryDeadLetterMessage(@PathVariable Long id) {
+        adminService.retryDeadLetterMessage(id);
+        return ResponseEntity.ok("Successfully requeued message from DLQ");
     }
 }
