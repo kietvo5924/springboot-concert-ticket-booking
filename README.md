@@ -48,10 +48,29 @@ Vui lòng Import file `api_testing/postman_collection.json` vào Postman để t
 
 ---
 
-## 🌟 Tóm tắt Kiến trúc (Architecture Highlights)
+## 🌟 Kiến trúc Hệ thống (Architecture & Solutions)
 
-* **Idempotency:** Ngăn chặn Double-payment bằng Idempotency Key lưu trên Redis.
-* **Concurrency:** Kết hợp **Redisson Distributed Lock** và **Pessimistic Lock** ngăn chặn Overselling khi 50.000 user cùng tranh 1 vé.
-* **Asynchronous:** Chuyển đổi mô hình Request-Response truyền thống sang Event-Driven với **Kafka**, giúp API phản hồi trong 2ms để chống Peak-Traffic.
+Để giải quyết bài toán Flash Sale với 50.000 users và 500 req/min, hệ thống áp dụng các pattern sau:
+1. **Chống Overselling (Bán lố vé):** Kết hợp **Redisson Distributed Lock** (khóa ở tầng Cache) và **Pessimistic Lock** (khóa ở tầng Database).
+2. **Chống Duplicate Bookings:** Sử dụng cơ chế **Idempotency Key** lưu trên Redis trong 5 phút. Nếu user bấm "Đặt vé" 2 lần liên tiếp, hệ thống sẽ chặn ngay lập tức.
+3. **Chống Voucher Abuse:** Sử dụng `Pessimistic Lock` khi kiểm tra và trừ số lượng Voucher, đảm bảo không có tình trạng 2 người cùng dùng 1 mã voucher cuối cùng.
+4. **Chống System Instability (Quá tải):** 
+   - **Asynchronous Processing:** Sử dụng **Apache Kafka** làm Message Broker. Request đặt vé được đẩy vào Kafka và trả về `202 Accepted` ngay lập tức (phản hồi trong 2ms), giúp API không bị nghẽn.
+   - **Rate Limiting:** Sử dụng thuật toán Token Bucket (Redis), giới hạn mỗi IP chỉ được gửi 5 requests/giây.
+   - **Redis Caching:** Cache toàn bộ danh sách Concert ở Redis, giảm tải hoàn toàn cho Database ở các tác vụ Read-heavy.
 
-> **Note:** Tính năng xác thực (JWT/Login) chủ động được tinh giản, giả định hệ thống sử dụng kiến trúc Microservices và Authentication được xử lý tập trung tại tầng API Gateway. Việc này giúp ban giám khảo tập trung chấm điểm năng lực xử lý nghiệp vụ Flash Sale.
+---
+
+## 📌 Phạm vi & Giả định (Assumptions & Limitations)
+
+Theo tinh thần tập trung vào Engineering Thinking và Core Value của bài toán Flash Sale, hệ thống được giới hạn phạm vi như sau:
+
+**Những gì đã làm (In-scope):**
+- **State Machine Đơn hàng:** Đơn hàng có 4 trạng thái (`RECEIVED` -> `RESERVED` -> `COMPLETED` hoặc `FAILED`). Hỗ trợ CronJob tự động hủy đơn `RESERVED` sau 1 phút nếu không thanh toán và hoàn trả vé.
+- **Customer API:** Đặt vé (Flash sale an toàn), Xem danh sách Concert, Thanh toán, Tra cứu trạng thái.
+- **Admin/Operation API:** Theo dõi lượng vé bán ra/tồn kho thực tế, xem danh sách đơn hàng, Quản lý Dead Letter Queue (DLQ) để xử lý các đơn lỗi (ví dụ: Concert không tồn tại).
+
+**Những gì không làm (Out-of-scope / Assumptions):**
+- **CRUD Vouchers & Concerts:** Hệ thống *không* cung cấp API để Operation Team Tạo/Sửa/Xóa Voucher hoặc Concert trên Dashboard. Thay vào đó, dữ liệu được tự động sinh ra (Seeding) lúc khởi động. Khách hàng vẫn có thể áp dụng Voucher hợp lệ khi đặt vé bình thường.
+- **Authentication/Authorization (JWT):** Tính năng phân quyền (Login/Signup) được lược bỏ. Giả định hệ thống chạy trong kiến trúc Microservices và Authentication đã được xử lý tập trung tại tầng API Gateway.
+- **Payment Gateway Integration:** API `/pay` hiện tại là mô phỏng (Mock). Khi gọi API này, hệ thống coi như thanh toán thành công và chốt vé.
