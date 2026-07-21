@@ -5,8 +5,13 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TicketCategoryResponseDto {
     private Long id;
     private String name;

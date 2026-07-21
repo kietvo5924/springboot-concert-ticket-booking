@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.cache.annotation.Cacheable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,7 @@ public class ConcertController {
     private final TicketCategoryRepository ticketCategoryRepository;
 
     @GetMapping
+    @Cacheable(value = "concerts")
     public ResponseEntity<List<ConcertResponseDto>> getAllConcerts() {
         List<ConcertResponseDto> concerts = concertRepository.findAll().stream()
                 .map(this::mapToConcertResponseDto)
@@ -30,6 +32,7 @@ public class ConcertController {
     }
 
     @GetMapping("/{id}/categories")
+    @Cacheable(value = "ticketCategories", key = "#id")
     public ResponseEntity<List<TicketCategoryResponseDto>> getTicketCategories(@PathVariable Long id) {
         List<TicketCategoryResponseDto> categories = ticketCategoryRepository.findByConcertId(id).stream()
                 .map(this::mapToTicketCategoryResponseDto)
