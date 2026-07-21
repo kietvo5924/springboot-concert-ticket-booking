@@ -27,4 +27,6 @@ public class Voucher extends BaseEntity {
     private LocalDateTime expiryDate;
     
     private Boolean active;
+    
+    private Integer quantity; // Limited voucher quantity
 }

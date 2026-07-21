@@ -40,11 +40,19 @@ public class OrderProcessorService {
         Voucher voucher = null;
         BigDecimal discount = BigDecimal.ZERO;
         if (message.getVoucherId() != null) {
-            voucher = voucherRepository.findById(message.getVoucherId())
+            voucher = voucherRepository.findWithLockById(message.getVoucherId())
                     .orElseThrow(() -> new RuntimeException("Voucher not found"));
                     
             if (voucher.getExpiryDate() != null && voucher.getExpiryDate().isBefore(LocalDateTime.now()) || !voucher.getActive()) {
                 throw new RuntimeException("Voucher is invalid or expired");
+            }
+            
+            if (voucher.getQuantity() != null && voucher.getQuantity() <= 0) {
+                throw new RuntimeException("Voucher is fully consumed");
+            }
+            
+            if (orderRepository.existsByUserIdAndVoucherId(message.getUserId(), voucher.getId())) {
+                throw new RuntimeException("User has already used this voucher");
             }
             
             discount = category.getPrice().multiply(voucher.getDiscountPercentage()).divide(BigDecimal.valueOf(100));
@@ -76,6 +84,11 @@ public class OrderProcessorService {
         ticket.setOrder(order);
         
         order.getTickets().add(ticket);
+        
+        if (voucher != null && voucher.getQuantity() != null) {
+            voucher.setQuantity(voucher.getQuantity() - 1);
+            voucherRepository.save(voucher);
+        }
         
         orderRepository.save(order);
         log.info("Successfully created order {} for requestId {}", order.getId(), message.getRequestId());

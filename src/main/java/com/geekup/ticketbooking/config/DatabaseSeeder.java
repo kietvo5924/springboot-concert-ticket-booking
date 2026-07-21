@@ -74,6 +74,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .maxDiscountAmount(new BigDecimal("200000")) // up to 200k
                     .expiryDate(LocalDateTime.now().plusDays(60))
                     .active(true)
+                    .quantity(100)
                     .build();
             
             com.geekup.ticketbooking.entity.Voucher voucher2 = com.geekup.ticketbooking.entity.Voucher.builder()
@@ -82,6 +83,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .maxDiscountAmount(new BigDecimal("500000")) 
                     .expiryDate(LocalDateTime.now().plusDays(60))
                     .active(true)
+                    .quantity(10)
                     .build();
 
             voucherRepository.saveAll(java.util.List.of(voucher1, voucher2));

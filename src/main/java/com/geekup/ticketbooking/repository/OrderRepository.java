@@ -8,4 +8,5 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByRequestId(String requestId);
+    boolean existsByUserIdAndVoucherId(Long userId, Long voucherId);
 }
