@@ -70,6 +70,24 @@ Vui lòng Import file `api_testing/postman_collection.json` vào Postman để t
 
 ---
 
+## Hướng dẫn Kiểm thử Chịu tải (Load Testing với k6)
+
+Để chứng minh khả năng xử lý bài toán Flash Sale (chống nghẽn cổ chai), dự án đã tích hợp sẵn kịch bản Spike Testing bằng **k6** (nằm trong thư mục `api_testing`). Kịch bản này sẽ giả lập **3.000 người dùng ảo (Virtual Users)** truy cập đồng thời và nã hơn **70.000 requests** vào API Đặt vé chỉ trong vòng 50 giây.
+
+Đảm bảo hệ thống đang hoạt động (Bước 2), sau đó mở một Terminal mới tại thư mục gốc và chạy lệnh sau (Yêu cầu phải có Docker):
+
+**Dành cho Windows PowerShell:**
+```powershell
+Get-Content .\api_testing\k6_load_test.js | docker run --rm -i grafana/k6 run -
+```
+**Dành cho Command Prompt (CMD) / macOS / Linux:**
+```bash
+docker run --rm -i grafana/k6 run - < api_testing/k6_load_test.js
+```
+*(Kết quả mong đợi: k6 sẽ in ra bảng tổng kết cho thấy hệ thống không bị crash, thời gian phản hồi `p(95)` tính bằng mili-giây và tỉ lệ lỗi `http_req_failed` bằng 0%).*
+
+---
+
 ## Kiến trúc Hệ thống (Architecture & Solutions)
 
 Để giải quyết bài toán Flash Sale với 50.000 users và 500 req/min, hệ thống áp dụng các pattern sau:
