@@ -33,8 +33,22 @@
                         "body": {
                             "mode": "raw",
                             "raw": "{\n  \"userId\": 1,\n  \"concertId\": 1,\n  \"ticketCategoryId\": 1,\n  \"voucherId\": null,\n  \"requestId\": \"req-uuid-12345\"\n}"
+                        },
+                        "description": "GHI CHÚ:\nAPI này cố định `requestId` để test cơ chế Idempotency. Để thấy rõ kết quả, hãy dùng tính năng **Run Collection (Postman Runner)** với số lượng vòng lặp (Iterations) lớn hơn 1.\n- Request đầu tiên thành công (202).\n- Các request sau bị chặn lại (409 Conflict).\n- Nếu chạy quá 5 req/s sẽ bị chặn bởi Rate Limiter (429 Too Many Requests)."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 202, 409 or 429 (Expected behavior)\", function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([202, 409, 429]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
                         }
-                    }
+                    ]
                 },
                 {
                     "name": "Submit Booking Request (Spam Test)",
@@ -62,7 +76,8 @@
                         "body": {
                             "mode": "raw",
                             "raw": "{\n  \"userId\": 1,\n  \"concertId\": 1,\n  \"ticketCategoryId\": 1,\n  \"voucherId\": null,\n  \"requestId\": \"{{randomReqId}}\"\n}"
-                        }
+                        },
+                        "description": "GHI CHÚ:\nAPI này dùng để test Load / Spam request. Sử dụng tính năng Pre-request script để tự động sinh ra UUID ngẫu nhiên cho mỗi lần lặp, nhằm vượt qua lớp bảo vệ Idempotency, giúp bạn test chính xác tính năng Rate Limiter (quá 5 req/s sẽ bị chặn 429) và tính toàn vẹn của hệ thống (hết vé sẽ báo 400 Sold Out)."
                     },
                     "event": [
                         {
@@ -93,7 +108,8 @@
                                 "v1",
                                 "concerts"
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nLấy danh sách tất cả các buổi biểu diễn (Concerts) đang có trên hệ thống."
                     }
                 },
                 {
@@ -115,7 +131,8 @@
                                 "1",
                                 "categories"
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nLấy danh sách các loại vé (VD: VIP, STANDARD), thông tin giá vé và số lượng vé còn lại của concert mang id = 1."
                     }
                 },
                 {
@@ -136,7 +153,8 @@
                                 "bookings",
                                 "req-uuid-12345"
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nKiểm tra trạng thái của một đơn hàng (PENDING, COMPLETED, FAILED) thông qua mã requestId. Dùng để làm polling checking sau khi đã submit booking."
                     }
                 },
                 {
@@ -158,7 +176,8 @@
                                 "req-uuid-12345",
                                 "pay"
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nMô phỏng hành động khách hàng thanh toán thành công cho đơn đặt vé."
                     },
                     "response": []
                 }
@@ -195,7 +214,8 @@
                                     "value": "10"
                                 }
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nAPI dành cho Admin. Lấy danh sách toàn bộ các đơn hàng trong hệ thống (có hỗ trợ phân trang)."
                     }
                 },
                 {
@@ -217,7 +237,8 @@
                                 "tickets",
                                 "availability"
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nAPI dành cho Admin. Xem báo cáo tổng quan về số lượng vé ban đầu (initial quantity) và số lượng vé còn lại (remaining quantity) của từng loại vé."
                     }
                 },
                 {
@@ -249,7 +270,8 @@
                         "body": {
                             "mode": "raw",
                             "raw": "{\n  \"status\": \"COMPLETED\"\n}"
-                        }
+                        },
+                        "description": "GHI CHÚ:\nAPI dành cho Admin để can thiệp và cập nhật trạng thái đơn hàng (ví dụ đổi từ PENDING sang COMPLETED hoặc CANCELLED)."
                     }
                 },
                 {
@@ -270,7 +292,8 @@
                                 "admin",
                                 "dlq"
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nAPI dành cho Admin. Xem danh sách các tin nhắn xử lý lỗi đã bị đẩy vào hàng đợi Dead Letter Queue (DLQ)."
                     },
                     "response": []
                 },
@@ -294,7 +317,8 @@
                                 "1",
                                 "retry"
                             ]
-                        }
+                        },
+                        "description": "GHI CHÚ:\nAPI này trả về 500 khi database rỗng (chưa có DLQ message nào có id=1). Để test thành công, cần tạo ra lỗi đặt vé trước đó để có message rơi vào hàng đợi lỗi."
                     },
                     "response": []
                 }
